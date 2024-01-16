@@ -10,6 +10,27 @@ pub struct App {
     pub running: bool,
     /// counter
     pub counter: u8,
+
+    pub electricity: MeterPoint,
+
+    pub gas: MeterPoint,
+}
+
+#[derive(Debug)]
+pub struct MeterPoint {
+    pub mpan: String,
+
+    pub serial: String,
+}
+
+impl MeterPoint {
+    pub fn parse(value: String) -> Result<MeterPoint, &'static str> {
+        let parts: Vec<_> = value.split(':').collect();
+        if parts.len() == 2 {
+            return Ok(MeterPoint { mpan: String::from(parts[0]), serial: String::from(parts[1]) });
+        }
+        return Err("Failed to parse value as a meter point")
+    }
 }
 
 impl Default for App {
@@ -17,14 +38,19 @@ impl Default for App {
         Self {
             running: true,
             counter: 0,
+            electricity: MeterPoint{ mpan: String::from(""), serial: String::from("")},
+            gas: MeterPoint{ mpan: String::from(""), serial: String::from("")},
         }
     }
 }
 
 impl App {
     /// Constructs a new instance of [`App`].
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(electricity: MeterPoint, gas: MeterPoint) -> Self {
+        let mut res = Self::default();
+        res.electricity = electricity;
+        res.gas = gas;
+        res
     }
 
     /// Handles the tick event of the terminal.
