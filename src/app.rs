@@ -1,7 +1,8 @@
 use std::error;
 
-/// Application result type.
-pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
+use anyhow::Result;
+
+pub type AppResult<T> = Result<T, Box<dyn error::Error>>;
 
 /// Application.
 #[derive(Debug)]
@@ -29,7 +30,7 @@ impl MeterPoint {
         if parts.len() == 2 {
             return Ok(MeterPoint { mpan: String::from(parts[0]), serial: String::from(parts[1]) });
         }
-        return Err("Failed to parse value as a meter point")
+        return Err("Failed to parse value as a meter point. Expected mpan and serial number separated by a colon. mpan:serial_number.")
     }
 }
 

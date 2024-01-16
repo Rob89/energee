@@ -27,8 +27,8 @@ async fn main() -> AppResult<()> {
 
     println!("Electricity {}, Gas {}", args.electricity, args.gas);
 
-    let electricity = MeterPoint::parse(args.electricity).expect("e argument should be populated with mpan:serial_number");
-    let gas = MeterPoint::parse(args.gas).expect("g argument should be populated with mpan:serial_number");
+    let electricity = MeterPoint::parse(args.electricity)?;
+    let gas = MeterPoint::parse(args.gas)?;
 
     // Create an application.
     let mut app = App::new(electricity, gas);
