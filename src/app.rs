@@ -12,9 +12,7 @@ pub struct App {
     /// counter
     pub counter: u8,
 
-    pub electricity: MeterPoint,
-
-    pub gas: MeterPoint,
+    pub meters: Vec<MeterPoint>,
 }
 
 #[derive(Debug)]
@@ -39,18 +37,16 @@ impl Default for App {
         Self {
             running: true,
             counter: 0,
-            electricity: MeterPoint{ mpan: String::from(""), serial: String::from("")},
-            gas: MeterPoint{ mpan: String::from(""), serial: String::from("")},
+            meters: Vec::new()
         }
     }
 }
 
 impl App {
     /// Constructs a new instance of [`App`].
-    pub fn new(electricity: MeterPoint, gas: MeterPoint) -> Self {
+    pub fn new(meters: Vec<MeterPoint>) -> Self {
         let mut res = Self::default();
-        res.electricity = electricity;
-        res.gas = gas;
+        res.meters = meters;
         res
     }
 

@@ -22,12 +22,8 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         Paragraph::new(format!(
             "Welcome to Energee. A TUI for smart data for no reason. \n\
         \n\
-        Electricity: {} (serial: {})\n\
-        Gas: {} (serial: {})",
-            app.electricity.mpan,
-            app.electricity.serial,
-            app.gas.mpan,
-            app.gas.serial,
+        meters: {:?}",
+            app.meters,
         ))
         .block(
             Block::default()

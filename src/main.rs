@@ -11,11 +11,8 @@ use clap::Parser;
 #[command(about = "Energee - Octopus Smart Meter TUI")]
 struct Args {
   /// App tick rate
-  #[arg(short='e', long, help="Electricity meter mpan and serial number separated by :")]
-  electricity: String,
-
-  #[arg(short, long, help="Gas meter mpan and serial number separated by :")]
-  gas: String,
+  #[arg(short='m', long, value_parser, num_args = 1.., value_delimiter = ' ', help="Meter mpan and serial number separated by :")]
+  meters: Vec<String>,
 }
 
 #[tokio::main]
@@ -25,13 +22,13 @@ async fn main() -> AppResult<()> {
 
     let args = Args::parse();
 
-    println!("Electricity {}, Gas {}", args.electricity, args.gas);
+    println!("meters {:?}", args.meters);
 
-    let electricity = MeterPoint::parse(args.electricity)?;
-    let gas = MeterPoint::parse(args.gas)?;
+    let parsed_meters = args.meters.iter().map(|x| MeterPoint::parse(x.clone())).collect::<Vec<_>>();
+    let ok_meters: Vec<_> = parsed_meters.into_iter().collect::<Result<_, _>>()?;
 
     // Create an application.
-    let mut app = App::new(electricity, gas);
+    let mut app = App::new(ok_meters);
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stderr());
