@@ -17,16 +17,14 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
-
     let _api_key = env::var("API_KEY").expect("API_KEY");
-
     let args = Args::parse();
-
-    println!("meters {:?}", args.meters);
-
     let parsed_meters = args.meters.iter().map(|x| MeterPoint::parse(x.clone())).collect::<Vec<_>>();
     let ok_meters: Vec<_> = parsed_meters.into_iter().collect::<Result<_, _>>()?;
 
+    if ok_meters.len() == 0 {
+            return Err("Expected at least one meter point to be provided")?
+    }
     // Create an application.
     let mut app = App::new(ok_meters);
 

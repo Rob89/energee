@@ -10,7 +10,7 @@ pub struct App {
     /// Is the application running?
     pub running: bool,
     /// counter
-    pub counter: u8,
+    pub selected_meter: usize,
 
     pub meters: Vec<MeterPoint>,
 }
@@ -36,7 +36,7 @@ impl Default for App {
     fn default() -> Self {
         Self {
             running: true,
-            counter: 0,
+            selected_meter: 0,
             meters: Vec::new()
         }
     }
@@ -58,15 +58,17 @@ impl App {
         self.running = false;
     }
 
-    pub fn increment_counter(&mut self) {
-        if let Some(res) = self.counter.checked_add(1) {
-            self.counter = res;
+    pub fn next_meter(&mut self) {
+        if let Some(res) = self.selected_meter.checked_add(1) {
+            if  res < self.meters.len() {
+                self.selected_meter = res;
+            }
         }
     }
 
-    pub fn decrement_counter(&mut self) {
-        if let Some(res) = self.counter.checked_sub(1) {
-            self.counter = res;
+    pub fn previous_meter(&mut self) {
+        if let Some(res) = self.selected_meter.checked_sub(1) {
+            self.selected_meter = res;
         }
     }
 }

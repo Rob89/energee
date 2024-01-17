@@ -22,8 +22,11 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         Paragraph::new(format!(
             "Welcome to Energee. A TUI for smart data for no reason. \n\
         \n\
-        meters: {:?}",
-            app.meters,
+        Meter ({} of {}): MPAN:{} Serial Number:{}",
+            app.selected_meter + 1,
+            app.meters.len(),
+            app.meters[app.selected_meter].mpan,
+            app.meters[app.selected_meter].serial,
         ))
         .block(
             Block::default()
@@ -38,7 +41,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     );
     frame.render_widget(
         Paragraph::new(format!(
-            "Press `Esc`, `Ctrl-C` or `q` to stop running."
+            "Press `Esc`, `Ctrl-C` or `q` to stop running. Move between meters with the arrow keys (left and right)."
         ))
         .block(
             Block::default()
