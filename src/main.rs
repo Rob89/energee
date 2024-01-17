@@ -1,3 +1,4 @@
+use energee::api::get_consumption_data;
 use energee::app::{App, AppResult, MeterPoint};
 use energee::event::{Event, EventHandler};
 use energee::handler::handle_key_events;
@@ -17,7 +18,7 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
-    let _api_key = env::var("API_KEY").expect("API_KEY");
+    let api_key = env::var("API_KEY").expect("API_KEY");
     let args = Args::parse();
     let parsed_meters = args.meters.iter().map(|x| MeterPoint::parse(x.clone())).collect::<Vec<_>>();
     let ok_meters: Vec<_> = parsed_meters.into_iter().collect::<Result<_, _>>()?;
@@ -27,6 +28,8 @@ async fn main() -> AppResult<()> {
     }
     // Create an application.
     let mut app = App::new(ok_meters);
+
+    let _data = get_consumption_data(&app, &api_key).await;
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stderr());

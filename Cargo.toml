@@ -7,9 +7,13 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.79"
+base64 = "0.21.7"
+chrono = { version = "0.4.31", features = ["serde"] }
 clap = { version = "4.4.17", features = ["derive"] }
 crossterm = { version = "0.27.0", features = ["event-stream"] }
 futures = "0.3.30"
 ratatui = "0.25.0"
-reqwest = "0.11.23"
+reqwest = { version = "0.11.23", features = ["json"] }
+serde = { version = "1.0.195", features = ["derive"] }
+serde_json = "1.0.111"
 tokio = { version = "1.35.1", features = ["full"] }

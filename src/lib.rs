@@ -12,3 +12,7 @@ pub mod tui;
 
 /// Event handler.
 pub mod handler;
+
+/// Octopus API
+pub mod api;
+
