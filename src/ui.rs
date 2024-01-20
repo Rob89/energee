@@ -41,20 +41,29 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     );
 
     if let Some(consumption_data) = &app.meters[app.selected_meter].comsumption_data {
-        let data = consumption_data
+        let groups = consumption_data
             .results
             .iter()
-            .map(|x| Bar::default().label(x.interval_start.format("%c").to_string().into()).value((x.consumption * 1000.0) as u64)).collect::<Vec<_>>();
-        let bc = BarChart::default()
+            .map(|x| Bar::default().value((x.consumption * 1000.0) as u64))
+            .collect::<Vec<_>>()
+        .chunks(10)
+        .enumerate()
+        .map(|(idx, &ref x)| BarGroup::default().bars(x).label(consumption_data.results[idx*10].interval_start.format("%H:%M (%d/%m)").to_string().into()))
+        .collect::<Vec<_>>();
+        
+
+        let mut bc = BarChart::default()
             .block(Block::default().title("Consumption").borders(Borders::ALL))
             .bar_width(1)
-            .bar_gap(0)
-            .group_gap(8)
-            .bar_style(Style::new().yellow())
-            .value_style(Style::new().red().bold())
+            .bar_gap(1)
+            .group_gap(0)
+            .bar_style(Style::new().gray())
+            .value_style(Style::new().black().bold().on_light_yellow())
             .label_style(Style::new().white())
-            .direction(Direction::Horizontal)
-            .data(BarGroup::default().bars(&data));
+            .direction(Direction::Vertical);
+        for group in groups {
+            bc = bc.data(group)
+        }        
         frame.render_widget(bc, layout[1]);
     }
 
