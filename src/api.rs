@@ -26,9 +26,14 @@ pub async fn get_consumption_data(app: &App, api_key: &str) -> AppResult<Consump
     let body = client.get(&uri)
         .header("Authorization", "Basic ".to_owned() + &b64 + ":")
         .send()
-        .await?
-        .json::<ConsumptionResponse>()
         .await?;
 
-    Ok(body)
+    if body.status().as_u16() != 200 {
+        println!("{}", body.text().await?);
+        Err("Response failed")?
+    }
+    else {
+        Ok(body.json::<ConsumptionResponse>().await?)
+    }
+
 }
