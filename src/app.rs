@@ -20,21 +20,39 @@ pub struct App {
 }
 
 #[derive(Debug)]
-pub struct MeterPoint {
+pub enum MeterPoint {
+    Gas(GasMeterPoint),
+    Electric(ElectricMeterPoint),
+}
+
+#[derive(Debug)]
+pub struct ElectricMeterPoint {
     pub mpan: String,
-
     pub serial: String,
+    pub comsumption_data: Option<ConsumptionResponse>
+}
 
+#[derive(Debug)]
+pub struct GasMeterPoint {
+    pub mprn: String,
+    pub serial: String,
     pub comsumption_data: Option<ConsumptionResponse>
 }
 
 impl MeterPoint {
-    pub fn parse(value: String) -> Result<MeterPoint, &'static str> {
+    pub fn parse_electric(value: String) -> Result<MeterPoint, &'static str> {
         let parts: Vec<_> = value.split(':').collect();
         if parts.len() == 2 {
-            return Ok(MeterPoint { mpan: String::from(parts[0]), serial: String::from(parts[1]), comsumption_data: None });
+            return Ok(MeterPoint::Electric(ElectricMeterPoint { mpan: String::from(parts[0]), serial: String::from(parts[1]), comsumption_data: None }));
         }
-        return Err("Failed to parse value as a meter point. Expected mpan and serial number separated by a colon. mpan:serial_number.")
+        return Err("Failed to parse value as an electric meter point. Expected mpan and serial number separated by a colon. mpan:serial_number.")
+    }
+    pub fn parse_gas(value: String) -> Result<MeterPoint, &'static str> {
+        let parts: Vec<_> = value.split(':').collect();
+        if parts.len() == 2 {
+            return Ok(MeterPoint::Gas(GasMeterPoint { mprn: String::from(parts[0]), serial: String::from(parts[1]), comsumption_data: None }));
+        }
+        return Err("Failed to parse value as a gas meter point. Expected mprn and serial number separated by a colon. mprn:serial_number.")
     }
 }
 
@@ -84,10 +102,16 @@ impl App {
         Ok(())
     }
 
-    async fn load_data(&mut self) -> AppResult<()> {
-        if self.meters[self.selected_meter].comsumption_data.is_none() {
-            let data = get_consumption_data(self, &self.api_key).await?;
-            self.meters[self.selected_meter].comsumption_data = Some(data);
+    pub async fn load_data(&mut self) -> AppResult<()> {
+        let meter = &mut self.meters[self.selected_meter];
+        let data = get_consumption_data(meter, &self.api_key.clone()).await?;
+        match  meter {
+            MeterPoint::Gas(ref mut g) => if g.comsumption_data.is_none() {
+                g.comsumption_data = Some(data);
+            },
+            MeterPoint::Electric(ref mut e) => if e.comsumption_data.is_none() {
+                e.comsumption_data = Some(data);
+            },
         }
         Ok(())
     }

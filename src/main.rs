@@ -1,4 +1,3 @@
-use energee::api::get_consumption_data;
 use energee::app::{App, AppResult, MeterPoint};
 use energee::event::{Event, EventHandler};
 use energee::handler::handle_key_events;
@@ -12,22 +11,29 @@ use clap::Parser;
 #[command(about = "Energee - Octopus Smart Meter TUI")]
 struct Args {
   /// App tick rate
-  #[arg(short='m', long, value_parser, num_args = 1.., value_delimiter = ' ', help="Meter mpan and serial number separated by :")]
-  meters: Vec<String>,
+  #[arg(short='e', long, value_parser, num_args = 1.., value_delimiter = ' ', help="Electric meter mpan and serial number separated by :")]
+  electric_meters: Vec<String>,
+
+  #[arg(short='g', long, value_parser, num_args = 1.., value_delimiter = ' ', help="Gas meter mprn and serial number separated by :")]
+  gas_meters: Vec<String>,
 }
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
     let api_key = env::var("API_KEY").expect("API_KEY");
     let args = Args::parse();
-    let parsed_meters = args.meters.iter().map(|x| MeterPoint::parse(x.clone())).collect::<Vec<_>>();
-    let ok_meters: Vec<_> = parsed_meters.into_iter().collect::<Result<_, _>>()?;
+    let parsed_electric_meters = args.electric_meters.iter().map(|x| MeterPoint::parse_electric(x.clone())).collect::<Vec<_>>();
+    let parsed_gas_meters = args.gas_meters.iter().map(|x| MeterPoint::parse_gas(x.clone())).collect::<Vec<_>>();
+    let mut meters: Vec<_> = parsed_electric_meters.into_iter().collect::<Result<_, _>>()?;
+    let mut ok_gas: Vec<_> = parsed_gas_meters.into_iter().collect::<Result<_, _>>()?;
+    meters.append(&mut ok_gas);
 
-    if ok_meters.len() == 0 {
+
+    if meters.len() == 0 {
             return Err("Expected at least one meter point to be provided")?
     }
     // Create an application.
-    let mut app = App::new(ok_meters, api_key.clone());
+    let mut app = App::new(meters, api_key.clone());
 
 
     // Initialize the terminal user interface.
@@ -38,8 +44,7 @@ async fn main() -> AppResult<()> {
     tui.init()?;
     tui.draw(&mut app)?;
 
-    let data = get_consumption_data(&app, &api_key).await?;
-    app.meters[app.selected_meter].comsumption_data = Some(data);
+    app.load_data().await?;
 
     // Start the main loop.
     while app.running {

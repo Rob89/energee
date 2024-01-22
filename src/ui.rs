@@ -5,7 +5,7 @@ use ratatui::{
     widgets::*,
 };
 
-use crate::app::App;
+use crate::app::{App, MeterPoint};
 
 /// Renders the user interface widgets.
 pub fn render(app: &mut App, frame: &mut Frame) {
@@ -18,15 +18,19 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     ])
     .split(frame.size());
 
+    let mp = &app.meters[app.selected_meter];
+    let detail = match mp {
+        MeterPoint::Gas(g) => format!("Gas - MPRN: {}, Serial Number: {}", g.mprn, g.serial),
+        MeterPoint::Electric(e) => format!("Electricity - MPAN: {}, Serial Number: {}", e.mpan, e.serial),
+    };
     frame.render_widget(
         Paragraph::new(format!(
             "Welcome to Energee. A TUI for smart meter data for no reason. \n\
-        Meter ({} of {}): MPAN:{} Serial Number:{}",
+        Meter ({} of {}): {}",
 
             app.selected_meter + 1,
             app.meters.len(),
-            app.meters[app.selected_meter].mpan,
-            app.meters[app.selected_meter].serial
+            detail,
         ))
         .block(
             Block::default()
@@ -40,7 +44,12 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         layout[0]
     );
 
-    if let Some(consumption_data) = &app.meters[app.selected_meter].comsumption_data {
+    let data = match mp {
+        MeterPoint::Gas(g) => &g.comsumption_data,
+        MeterPoint::Electric(e) => &e.comsumption_data,
+    };
+
+    if let Some(consumption_data) = data {
         let groups = consumption_data
             .results
             .iter()
