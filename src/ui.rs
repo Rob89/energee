@@ -50,14 +50,18 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     };
 
     if let Some(consumption_data) = data {
-        let groups = consumption_data
+        let reversed = consumption_data
             .results
+            .iter()
+            .rev()
+            .collect::<Vec<_>>();
+        let groups = reversed
             .iter()
             .map(|x| Bar::default().value((x.consumption * 1000.0) as u64))
             .collect::<Vec<_>>()
         .chunks(10)
         .enumerate()
-        .map(|(idx, &ref x)| BarGroup::default().bars(x).label(consumption_data.results[idx*10].interval_start.format("%H:%M (%d/%m)").to_string().into()))
+        .map(|(idx, &ref x)| BarGroup::default().bars(x).label(reversed[idx*10].interval_start.format("%H:%M (%d/%m)").to_string().into()))
         .collect::<Vec<_>>();
         
 
