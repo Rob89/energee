@@ -5,7 +5,7 @@ use ratatui::{
     widgets::*,
 };
 
-use crate::app::{App, MeterPoint};
+use crate::app::{App, MeterPoint, GroupBy};
 
 /// Renders the user interface widgets.
 pub fn render(app: &mut App, frame: &mut Frame) {
@@ -13,15 +13,22 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     .direction(Direction::Vertical)
     .constraints(vec![
         Constraint::Percentage(10),
-        Constraint::Percentage(85),
-        Constraint::Percentage(5),
+        Constraint::Percentage(80),
+        Constraint::Percentage(10),
     ])
     .split(frame.size());
 
+    let consumption_grouping = match app.group_by {
+        GroupBy::HalfHour => "Half-hourly",
+        GroupBy::Hour => "Hourly",
+        GroupBy::Day => "Daily",
+        GroupBy::Week => "Weekly",
+    };
+
     let mp = &app.meters[app.selected_meter];
     let detail = match mp {
-        MeterPoint::Gas(g) => format!("Gas - MPRN: {}, Serial Number: {}", g.mprn, g.serial),
-        MeterPoint::Electric(e) => format!("Electricity - MPAN: {}, Serial Number: {}", e.mpan, e.serial),
+        MeterPoint::Gas(g) => format!("Gas - Serial Number: {}", g.serial),
+        MeterPoint::Electric(e) => format!("Electricity - Serial Number: {}", e.serial),
     };
     frame.render_widget(
         Paragraph::new(format!(
@@ -66,7 +73,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         
 
         let mut bc = BarChart::default()
-            .block(Block::default().title("Consumption").borders(Borders::ALL))
+            .block(Block::default().title(format!("Consumption {}", consumption_grouping)).borders(Borders::ALL))
             .bar_width(1)
             .bar_gap(1)
             .group_gap(0)
@@ -78,11 +85,24 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             bc = bc.data(group)
         }        
         frame.render_widget(bc, layout[1]);
+    } else if app.loading {
+        frame.render_widget(
+            Paragraph::new(format!("Loading..."))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_type(BorderType::Rounded),
+                )
+                .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+                .alignment(Alignment::Center),
+            layout[2]
+        );
     }
 
     frame.render_widget(
         Paragraph::new(format!(
-            "Press `Esc`, `Ctrl-C` or `q` to stop running. Move between meters with the arrow keys (left and right)."
+            "Press `Esc`, `Ctrl-C` or `q` to stop running. Move between meters with the arrow keys (left and right).\n\
+        H(a)lf hourly, (H)ourly, (D)aily, (W)eekly."
         ))
         .block(
             Block::default()

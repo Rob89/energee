@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use base64::prelude::*;
 
-use crate::app::{AppResult, MeterPoint};
+use crate::app::{AppResult, MeterPoint, GroupBy};
 
 // {"consumption":0.0,"interval_start":"2024-01-16T23:00:00Z","interval_end":"2024-01-16T23:30:00Z"}
 #[derive(Debug, Deserialize, Serialize)]
@@ -18,10 +18,16 @@ pub struct ConsumptionResponse {
     pub count: i64,
 }
 
-pub async fn get_consumption_data(mp: &MeterPoint, api_key: &str) -> AppResult<ConsumptionResponse> {
+pub async fn get_consumption_data(mp: &MeterPoint, api_key: &str, group_by: &GroupBy) -> AppResult<ConsumptionResponse> {
+    let group_by = match group_by {
+        GroupBy::HalfHour => "",
+        GroupBy::Hour => "?group_by=hour",
+        GroupBy::Day => "?group_by=day",
+        GroupBy::Week => "?group_by=week",
+    };
     let uri = match mp {
-        MeterPoint::Gas(g) => format!("https://api.octopus.energy/v1/gas-meter-points/{}/meters/{}/consumption/", &g.mprn, &g.serial),
-        MeterPoint::Electric(e) => format!("https://api.octopus.energy/v1/electricity-meter-points/{}/meters/{}/consumption/", &e.mpan, &e.serial),
+        MeterPoint::Gas(g) => format!("https://api.octopus.energy/v1/gas-meter-points/{}/meters/{}/consumption{}", &g.mprn, &g.serial, group_by),
+        MeterPoint::Electric(e) => format!("https://api.octopus.energy/v1/electricity-meter-points/{}/meters/{}/consumption{}", &e.mpan, &e.serial, group_by),
     };
 
     let b64 = BASE64_STANDARD.encode(api_key.as_bytes());

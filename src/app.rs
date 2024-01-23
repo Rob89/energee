@@ -9,14 +9,12 @@ pub type AppResult<T> = Result<T, Box<dyn error::Error>>;
 /// Application.
 #[derive(Debug)]
 pub struct App {
-    /// Is the application running?
     pub running: bool,
-    /// counter
     pub selected_meter: usize,
-
     pub meters: Vec<MeterPoint>,
-
     pub api_key: String,
+    pub group_by: GroupBy,
+    pub loading: bool,
 }
 
 #[derive(Debug)]
@@ -37,6 +35,14 @@ pub struct GasMeterPoint {
     pub mprn: String,
     pub serial: String,
     pub comsumption_data: Option<ConsumptionResponse>
+}
+
+#[derive(Debug)]
+pub enum GroupBy {
+    HalfHour,
+    Hour,
+    Day,
+    Week,
 }
 
 impl MeterPoint {
@@ -62,7 +68,9 @@ impl Default for App {
             running: true,
             selected_meter: 0,
             api_key: "".into(),
-            meters: Vec::new()
+            meters: Vec::new(),
+            group_by: GroupBy::HalfHour,
+            loading: false,
         }
     }
 }
@@ -104,15 +112,13 @@ impl App {
 
     pub async fn load_data(&mut self) -> AppResult<()> {
         let meter = &mut self.meters[self.selected_meter];
-        let data = get_consumption_data(meter, &self.api_key.clone()).await?;
+        self.loading = true;
+        let data = get_consumption_data(meter, &self.api_key.clone(), &self.group_by).await?;
         match  meter {
-            MeterPoint::Gas(ref mut g) => if g.comsumption_data.is_none() {
-                g.comsumption_data = Some(data);
-            },
-            MeterPoint::Electric(ref mut e) => if e.comsumption_data.is_none() {
-                e.comsumption_data = Some(data);
-            },
+            MeterPoint::Gas(ref mut g) => g.comsumption_data = Some(data),
+            MeterPoint::Electric(ref mut e) => e.comsumption_data = Some(data),
         }
+        self.loading = false;
         Ok(())
     }
 }
