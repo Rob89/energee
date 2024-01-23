@@ -56,6 +56,8 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         MeterPoint::Electric(e) => &e.comsumption_data,
     };
 
+    let chunk_size: usize = 12;
+
     if let Some(consumption_data) = data {
         let reversed = consumption_data
             .results
@@ -66,9 +68,9 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             .iter()
             .map(|x| Bar::default().value((x.consumption * 1000.0) as u64))
             .collect::<Vec<_>>()
-        .chunks(10)
+        .chunks(chunk_size)
         .enumerate()
-        .map(|(idx, &ref x)| BarGroup::default().bars(x).label(reversed[idx*10].interval_start.format("%H:%M (%d/%m)").to_string().into()))
+        .map(|(idx, &ref x)| BarGroup::default().bars(x).label(reversed[idx * chunk_size].interval_start.format("%H:%M (%d/%m)").to_string().into()))
         .collect::<Vec<_>>();
         
 

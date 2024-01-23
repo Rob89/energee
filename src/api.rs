@@ -21,13 +21,13 @@ pub struct ConsumptionResponse {
 pub async fn get_consumption_data(mp: &MeterPoint, api_key: &str, group_by: &GroupBy) -> AppResult<ConsumptionResponse> {
     let group_by = match group_by {
         GroupBy::HalfHour => "",
-        GroupBy::Hour => "?group_by=hour",
-        GroupBy::Day => "?group_by=day",
-        GroupBy::Week => "?group_by=week",
+        GroupBy::Hour => "&group_by=hour",
+        GroupBy::Day => "&group_by=day",
+        GroupBy::Week => "&group_by=week",
     };
     let uri = match mp {
-        MeterPoint::Gas(g) => format!("https://api.octopus.energy/v1/gas-meter-points/{}/meters/{}/consumption{}", &g.mprn, &g.serial, group_by),
-        MeterPoint::Electric(e) => format!("https://api.octopus.energy/v1/electricity-meter-points/{}/meters/{}/consumption{}", &e.mpan, &e.serial, group_by),
+        MeterPoint::Gas(g) => format!("https://api.octopus.energy/v1/gas-meter-points/{}/meters/{}/consumption?page_size=96{}", &g.mprn, &g.serial, group_by),
+        MeterPoint::Electric(e) => format!("https://api.octopus.energy/v1/electricity-meter-points/{}/meters/{}/consumption?page_size=96{}", &e.mpan, &e.serial, group_by),
     };
 
     let b64 = BASE64_STANDARD.encode(api_key.as_bytes());
